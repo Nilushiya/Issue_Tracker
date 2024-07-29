@@ -11,6 +11,8 @@ import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createIssueSchema } from '@/app/validation';
 import {z} from 'zod';
+import ErrorMessage from '@/app/Components/ErrorMessage';
+import Spinner from '@/app/Components/Spinner';
 
 type IssueForm = z.infer<typeof createIssueSchema>
 
@@ -24,6 +26,8 @@ const NewIssues = () => {
    });
    const router = useRouter();
    const [error , setError] = useState('');
+   const [spinner , setSpinner] = useState(false)
+
   return (
     <div className='max-w-xl'>
       {error && <Callout.Root color='red' className='mb-5'>
@@ -33,10 +37,13 @@ const NewIssues = () => {
       </Callout.Root>}
       <form className=' space-y-3' onSubmit={handleSubmit(async(data) => {
      try{
-      { await axios.post('/api/issues' , data);
+      { 
+        setSpinner(true)
+        await axios.post('/api/issues' , data);
         router.push('/issues');} 
      } 
      catch(error){
+      setSpinner(false)
       setError('An unexpected error occurred.')
       // console.log("Error :", error )
      }
@@ -44,14 +51,20 @@ const NewIssues = () => {
         <TextField.Root placeholder='Title' {...register('title')}>
             {/* <TextField.Slot pl></TextField.Slot> */}
         </TextField.Root>
-        {errors.title && <Text color='red' as='p'>{errors.title.message}</Text>}
+        <ErrorMessage >
+          {errors.title?.message}
+        </ErrorMessage>
+        {/* {errors.title && <Text color='red' as='p'>{errors.title.message}</Text>} */}
         <Controller 
           name='description'
           control={control} 
           render={({field}) => <SimpleMDE placeholder="Description" {...field} />} 
         />
-        {errors.description && <Text color='red' as='p'>{errors.description.message}</Text>}
-        <Button>Submit New Issues</Button>
+        <ErrorMessage >
+          {errors.description?.message}
+        </ErrorMessage>
+        {/* {errors.description && <Text color='red' as='p'>{errors.description.message}</Text>} */}
+        <Button>Submit New Issues {spinner && <Spinner/>}</Button>
     </form>
     </div>
   )
